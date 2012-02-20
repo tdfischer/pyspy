@@ -19,7 +19,7 @@
 from distutils.core import setup
 
 setup(name='pyspy',
-      version = '0.1',
+      version = '0.1.1',
       description='GameSpy4 client',
       author='Trever Fischer',
       author_email='tdfischer@fedoraproject.org',

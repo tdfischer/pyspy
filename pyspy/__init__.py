@@ -7,12 +7,15 @@ import string
 from twisted.internet.protocol import ConnectedDatagramProtocol, Factory
 from twisted.internet import reactor
 
+__all__ = ['GamespyProtocol', 'GamespyClient']
+
 class GamespyProtocol(ConnectedDatagramProtocol):
     def __init__(self, host, port):
         self.__host = socket.gethostbyname(host)
         self.__port = port
         self.__players = []
         self.__tags = {}
+        self.__token = 0
 
     def startProtocol(self):
         self.transport.connect(self.__host, self.__port)
@@ -31,9 +34,11 @@ class GamespyProtocol(ConnectedDatagramProtocol):
     def datagramReceived(self, data, addr):
         type, = struct.unpack('!B', data[0])
         if type == 0x09:
-            data = data.ljust(16, '\0')
-            self.__seqnum,token = struct.unpack('!i11s', data[1:])
-            self.__token = int(''.join(c for c in token if c in string.printable))
+            # Clamp data size to exactly 16 bytes
+            data = data[1:].ljust(15, '\0')[0:15]
+            self.__seqnum,token = struct.unpack('!i11s', data)
+            validChars = "0123456789-"
+            self.__token = int(''.join(c for c in token if c in validChars))
             self.sendInfoQuery()
         elif type == 0:
             tokens, players = data[5:].split('\x01',1)
